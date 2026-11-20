@@ -1,73 +1,135 @@
-[![tests](https://github.com/VirusTotal/yara-x/actions/workflows/tests.yaml/badge.svg)](https://github.com/VirusTotal/yara-x/actions/workflows/tests.yaml)
-[![coverage](https://codecov.io/gh/VirusTotal/yara-x/branch/main/graph/badge.svg?token=dPsruCiDqN)](https://app.codecov.io/gh/VirusTotal/yara-x)
-[![Crates.io](https://img.shields.io/crates/v/yara-x.svg)](https://crates.io/crates/yara-x)
-![Crates.io MSRV](https://img.shields.io/crates/msrv/yara-x)
+<p align="center">
+  <a href="https://www.rust-lang.org/">
+    <img src="https://www.rust-lang.org/logos/rust-logo-512x512.png" alt="Rust programming language logo" width="112" />
+  </a>
+</p>
 
-## YARA-X
+<h1 align="center">Ferrispector</h1>
 
-YARA-X is a re-incarnation of [YARA](https://github.com/VirusTotal/yara), a
-pattern matching tool designed with malware researchers in mind. This new
-incarnation intends to be faster, safer and more user-friendly than its
-predecessor. The ultimate goal of YARA-X is replacing YARA as the default
-pattern matching tool for malware researchers.
+<p align="center">
+  <strong>Rust-powered pattern inspection for malware research and security analysis.</strong>
+</p>
 
-With YARA-X you can create descriptions of malware families (or whatever you
-want to describe) based on textual or binary patterns. Each description (a.k.a.
-rule) consists of a set of patterns and a boolean expression which determine its
-logic. Let’s see an example:
+<p align="center">
+  <a href="https://github.com/CyberStill-GmbH/ferrispector/actions/workflows/tests.yaml"><img src="https://github.com/CyberStill-GmbH/ferrispector/actions/workflows/tests.yaml/badge.svg?branch=main" alt="Tests" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg" alt="BSD-3-Clause License" /></a>
+  <img src="https://img.shields.io/badge/Rust-1.95%2B-CE422B?logo=rust&logoColor=white" alt="Rust 1.95 or newer" />
+  <a href="https://github.com/VirusTotal/yara-x"><img src="https://img.shields.io/badge/based%20on-YARA--X-informational" alt="Based on YARA-X" /></a>
+</p>
+
+---
+
+## Overview
+
+**Ferrispector** is a Rust-based pattern inspection project focused on malware research, digital forensics, and security engineering. It is an **independent fork of [YARA-X](https://github.com/VirusTotal/yara-x)**, the pattern-matching engine developed by VirusTotal.
+
+Ferrispector provides a foundation for describing and identifying files using textual patterns, hexadecimal signatures, regular expressions, and expressive rule conditions. The project currently retains the proven YARA-X codebase and tooling while establishing its own identity and direction for future development.
+
+> **Project status:** Ferrispector is an early-stage fork. Its underlying packages, command-line executable (`yr`), and portions of its documentation still use YARA-X naming. Ferrispector is not a separately published crate or a new detection engine at this stage.
+
+## Capabilities
+
+The inherited YARA-X codebase provides:
+
+- **Flexible pattern matching** — text strings, binary signatures, regular expressions, and logical conditions.
+- **Rule-based inspection** — reusable signatures with metadata, tags, and expressive matching logic.
+- **Command-line tooling** — scan targets, compile rules, check syntax, and format rules.
+- **Rust-first implementation** — a systems-language foundation designed for performance and memory safety.
+- **Integration surfaces** — source components for a Rust library, C API, Python bindings, and WebAssembly.
+- **Security workflows** — a foundation for malware triage, file inspection, and detection engineering.
+
+These are capabilities inherited from YARA-X; they should not be interpreted as Ferrispector-specific enhancements.
+
+## Getting started
+
+### Requirements
+
+- **Rust 1.95.0 or newer**, as specified in the workspace manifest
+- Cargo and Git
+- An environment with the build dependencies required by the selected workspace components
+
+### Build from source
+
+```bash
+git clone https://github.com/CyberStill-GmbH/ferrispector.git
+cd ferrispector
+cargo build --release -p yara-x-cli
+```
+
+The current command-line executable retains its upstream name:
+
+```bash
+./target/release/yr --help
+```
+
+On Windows, run `./target/release/yr.exe` (or `.\target\release\yr.exe` in PowerShell).
+
+### Your first inspection
+
+Save the following as `example.yar`:
 
 ```yara
-rule silent_banker : banker {
+rule ferrispector_demo : inspection {
     meta:
-        description = "This is just an example"
-        threat_level = 3
-        in_the_wild = true
+        description = "Basic demonstration rule"
+        category = "example"
 
     strings:
-        $a = {6A 40 68 00 30 00 00 6A 14 8D 91}
-        $b = {8D 4D B0 2B C1 83 C0 27 99 6A 4E 59 F7 F9}
-        $c = "UVODFRYSIHLNWPEJXQZAKCBGMT"
+        $marker = "FerrispectorTestString"
+        $hex = { 46 65 72 72 69 73 }
 
     condition:
-        $a or $b or $c
+        $marker or $hex
 }
 ```
 
-The above rule is telling YARA-X that any file containing one of the three
-patterns must be reported as `silent_banker`. This is just a simple example,
-more complex and powerful rules can be created by using wild-cards,
-case-insensitive strings, regular expressions, special operators and many other
-features that you'll find explained in
-the [documentation](https://virustotal.github.io/yara-x/docs/writing_rules/anatomy-of-a-rule/).
+Create a sample file and scan it:
 
-## FAQ
+```bash
+printf 'FerrispectorTestString\n' > sample.txt
+./target/release/yr scan example.yar sample.txt
+```
 
-#### How does YARA-X compare to YARA?
+A match indicates that the file contains at least one of the patterns defined in the rule. This example demonstrates signature matching, **not** a determination that a file is malicious.
 
-Read [this](https://virustotal.github.io/yara-x/docs/intro/yara-x-vs-yara/).
+## Repository layout
 
-#### Which are the differences at the rule level?
+| Directory | Purpose |
+| --- | --- |
+| `lib/` | Core pattern-matching library |
+| `cli/` | Command-line interface (`yr`) |
+| `parser/` | Rule parsing components |
+| `capi/` | C integration layer |
+| `py/` | Python bindings |
+| `js-wasm/` | JavaScript / WebAssembly integration |
+| `docs/` | Documentation source |
 
-Read [this](https://virustotal.github.io/yara-x/docs/writing_rules/differences-with-yara/).
+## Project direction
 
-#### Is YARA still maintained?
+Ferrispector is intended as a practical base for security-focused inspection workflows. Potential areas of independent development include improved analyst ergonomics, rule-management tooling, and integration with endpoint or SOC detection pipelines.
 
-Yes, it is. YARA is still being maintained, and future releases will include
-bug fixes and minor features. However, don’t expect new large features or
-modules. All efforts to enhance YARA, including the addition of new modules,
-will now focus on YARA-X.
+**These are directions under consideration, not features claimed to be implemented.** Changes and milestones will be tracked in this repository as they are developed.
 
-#### What's the current state of YARA-X?
+## Documentation and compatibility
 
-YARA-X is already mature and stable. At VirusTotal, we have been running YARA-X 
-in production for a long time, scanning billions of files with tens of thousands 
-of rules, and addressing discrepancies and bugs. This means that YARA-X is already
-battle-tested.
+Because Ferrispector is currently based on YARA-X, the upstream documentation remains the primary reference for its inherited engine and rule syntax:
 
-Please test YARA-X and don’t hesitate
-to [open an issue](https://github.com/VirusTotal/yara-x/issues/new) if you
-find a bug or some feature that you want to see implemented.
+- [Writing YARA-X rules](https://virustotal.github.io/yara-x/docs/writing_rules/anatomy-of-a-rule/)
+- [YARA-X versus YARA](https://virustotal.github.io/yara-x/docs/intro/yara-x-vs-yara/)
+- [Rule-level differences](https://virustotal.github.io/yara-x/docs/writing_rules/differences-with-yara/)
+
+Not all YARA rules are necessarily compatible with YARA-X without adjustments. Refer to the upstream compatibility documentation when migrating rules.
 
 ## Contributing
 
-Contributions to YARA-X are welcome! For details on the Google Contributor License Agreement (CLA) requirement, code style conventions, and how to submit pull requests, please read [CONTRIBUTING.md](CONTRIBUTING.md).
+Bug reports, documentation improvements, and development proposals can be submitted through [Ferrispector Issues](https://github.com/CyberStill-GmbH/ferrispector/issues). For source conventions and build checks, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Note:** The current contribution guide is inherited from YARA-X and references upstream contribution and CLA requirements. Those instructions have not yet been adapted into a separate Ferrispector contributor policy.
+
+## Acknowledgements and license
+
+Ferrispector is derived from **[YARA-X](https://github.com/VirusTotal/yara-x)** by VirusTotal and its contributors. We acknowledge their work and preserve the upstream authorship and license notices. Ferrispector is **not affiliated with or endorsed by VirusTotal, Google, or the Rust Project**.
+
+The source code is distributed under the **[BSD 3-Clause License](LICENSE)**, subject to the notices in the repository. See [AUTHORS](AUTHORS) and [CONTRIBUTORS](CONTRIBUTORS) for inherited attribution.
+
+The Rust logo shown above belongs to the Rust Foundation and is used to indicate the implementation language; it is not a Ferrispector product mark. See the [Rust media guide and logo licensing information](https://rust-lang.org/policies/media-guide).
