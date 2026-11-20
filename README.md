@@ -110,6 +110,12 @@ Ferrispector is intended as a practical base for security-focused inspection wor
 
 **These are directions under consideration, not features claimed to be implemented.** Changes and milestones will be tracked in this repository as they are developed.
 
+## Fork author and maintainer
+
+**[César Adrián Guevara Salcedo (@CyberStill-GmbH)](https://github.com/CyberStill-GmbH)** maintains the Ferrispector fork and its independent development direction.
+
+Ferrispector preserves the original YARA-X contributors' attribution. This maintainer credit refers to the fork, not authorship of the inherited upstream engine.
+
 ## Documentation and compatibility
 
 Because Ferrispector is currently based on YARA-X, the upstream documentation remains the primary reference for its inherited engine and rule syntax:
